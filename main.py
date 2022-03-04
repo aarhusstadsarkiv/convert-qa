@@ -13,8 +13,8 @@ DRY = False
 
 parser = argparse.ArgumentParser(description='Easily compare files between original, master and statutory')
 parser.add_argument('--original', help='directory pointing to original documents containing the metadata folder')
-parser.add_argument('--statutory', default='', help='(optional) directory pointing to statutory documents containing the metadata folder')
-parser.add_argument('--master', help='directory pointing to master documents containing the metadata folder')
+parser.add_argument('--statutory', default='', help='(optional) directory pointing to statutory documents')
+parser.add_argument('--master', help='directory pointing to master documents')
 parser.add_argument('-o', '--output', default='./comparison_output', help='directory to output files into')
 parser.add_argument('--digiarch', action="store_true", help='generate metadata folder with digiarch')
 parser.add_argument('--silent', action="store_true", help='only print errors')
