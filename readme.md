@@ -1,4 +1,4 @@
-## Compare
+## Converqa
 
 > This tool provides a way for you to easily compare files between original, master and statutory
 
