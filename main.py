@@ -11,7 +11,7 @@ from dataclasses import dataclass
 log = print
 DRY = False
 
-parser = argparse.ArgumentParser(description='Retrieve converted and master files for a comparison check')
+parser = argparse.ArgumentParser(description='Easily compare files between original, master and statutory')
 parser.add_argument('--original', help='directory pointing to original documents containing the metadata folder')
 parser.add_argument('--statutory', default='', help='(optional) directory pointing to statutory documents containing the metadata folder')
 parser.add_argument('--master', help='directory pointing to master documents containing the metadata folder')
