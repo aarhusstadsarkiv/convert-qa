@@ -8,9 +8,7 @@ The script requires that you specify the paths to original and master documents:
 
 - `python main.py --master path/to/master/files --original path/to/original/files`
 
-Statutory documents can also be specified but is optional
-
-- `python main.py --master path/to/master/files --original path/to/original/files --statutory path/to/files`
+Statutory documents can also be specified with `--statutory` but is optional
 
 The tool only reads from the metadata database for the original documents.
 
