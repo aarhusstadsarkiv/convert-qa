@@ -91,11 +91,18 @@ def output_files(root: str, folders: List[PUIDFolder], others: Dict[str, str]):
     Copy over the files per PUID folder
     """
     os.makedirs(root, exist_ok=True)
+
+    errs = [] # error messages
+
     log("Found", len(folders), "PUIDs to copy files for")
+
     for p in folders:
         log("Copying files for PUID", p.puid)
         for n, (file_path, doc_path) in enumerate(((p.smallest, p.smallest_doc_path), (p.biggest, p.biggest_doc_path))):
             if not file_path:
+                continue
+            if not os.path.exists(file_path):
+                errs.append(f"Expected file for PUID {p.puid} in original to exist: {file_path}")
                 continue
             doc_id = Path(doc_path).name
             doc_id_path = os.path.join(root, p.puid.replace('/', '_'), doc_id)
@@ -111,7 +118,15 @@ def output_files(root: str, folders: List[PUIDFolder], others: Dict[str, str]):
                 other_files = glob(os.path.join(other_path, doc_path, '*'))
                 for f in other_files:
                     shutil.copy2(f, os.path.join(doc_id_path, f'{other_name}{Path(f).suffix}'))
+    
 
+                if not other_files:
+                    errs.append(f"Could not find file for PUID {p.puid} in {other_name}, PUID file in question: {file_path}")
+
+    if errs:
+        print("A few errors occured while copying:")
+        for e in errs:
+            print("- "+e)
 
 def main():
     global log

@@ -12,6 +12,8 @@ Statutory documents can also be specified with `--statutory` but is optional
 
 The tool only reads from the metadata database for the original documents.
 
+Default output is set to `./comparison_output`, this can be changed with `-o` and `--output`.
+
 ### Help
 
 ```
