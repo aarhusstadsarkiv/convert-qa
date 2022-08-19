@@ -3,7 +3,7 @@
 > This tool provides a way for you to easily compare files between original, master and statutory
 
 ### Installation
-Preferred way is to install with pipx: `git+https://github.com/aarhusstadsarkiv/convert-qa.git`
+Preferred way is to install with pipx: `pipx install git+https://github.com/aarhusstadsarkiv/convert-qa.git`
 
 ### Instructions
 The script requires that you specify the paths to original and master documents:
