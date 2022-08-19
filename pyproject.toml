@@ -1,16 +1,14 @@
 [tool.poetry]
-name = "converqa"
-version = "0.1.0"
+name = "convert-qa"
+version = "0.1.1"
 description = "Enables easy comparison of original files to ets converted master copies"
-authors = ["Claus Juhl Knudsen <cjk@aarhus.dk>"]
+authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
-
-[tool.poetry.dev-dependencies]
+python = ">=3.9"
 
 [tool.poetry.scripts]
-converqa = "converqa.main:main"
+convert-qa = "converqa.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
