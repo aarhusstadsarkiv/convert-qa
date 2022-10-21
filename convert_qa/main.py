@@ -4,11 +4,10 @@ import os
 import shutil
 import sqlite3
 import traceback
-from typing import Dict, List, Union
+from typing import Union
 from pathlib import Path
 from dataclasses import dataclass
 
-log = print
 DRY = False
 
 parser = argparse.ArgumentParser(
@@ -18,14 +17,14 @@ parser.add_argument(
     "--original",
     help="directory pointing to original documents containing the metadata folder",
 )
+parser.add_argument("--master", help="directory pointing to master documents")
 parser.add_argument(
     "--statutory",
     default="",
     help="(optional) directory pointing to statutory documents",
 )
-parser.add_argument("--master", help="directory pointing to master documents")
+
 parser.add_argument(
-    "-o",
     "--output",
     default="./comparison_output",
     help="directory to output files into",
@@ -33,7 +32,7 @@ parser.add_argument(
 parser.add_argument(
     "--digiarch", action="store_true", help="generate metadata folder with digiarch"
 )
-parser.add_argument("--silent", action="store_true", help="only print errors")
+# parser.add_argument("--silent", action="store_true", help="only print errors")
 
 
 @dataclass
@@ -53,21 +52,21 @@ class PUIDFolders:
     def __init__(self, path: str) -> None:
         self.path = path
 
-        self._puids: List[PUIDFolder] = []
+        self._puids: list[PUIDFolder] = []
 
         # check if files db exists
         self.db_path = os.path.join(path, "_metadata", "files.db")
         if not os.path.exists(self.db_path):
             raise SystemExit(f"ERROR: Could not find db file at '{self.db_path}'")
 
-    def collect(self) -> List[PUIDFolder]:
+    def collect(self) -> list[PUIDFolder]:
         """
         Collects information about smallest and biggest files for each PUID in the given files db
         """
         if self._puids:
             return self._puids
 
-        log(f"Collecting puid data from {self.path}")
+        print(f"Collecting puid data from {self.path}")
         # conn: sqlite3.Connection = None
         try:
             conn = sqlite3.connect(self.db_path)
@@ -111,7 +110,7 @@ class PUIDFolders:
         return self._puids
 
 
-def output_files(root: str, folders: List[PUIDFolder], others: Dict[str, str]):
+def output_files(root: str, folders: list[PUIDFolder], others: dict[str, str]):
     """
     Copy over the files per PUID folder
     """
@@ -119,10 +118,10 @@ def output_files(root: str, folders: List[PUIDFolder], others: Dict[str, str]):
 
     errs = []  # error messages
 
-    log("Found", len(folders), "PUIDs to copy files for")
+    print("Found", len(folders), "PUIDs to copy files for")
 
     for p in folders:
-        log("Copying files for PUID", p.puid)
+        print("Copying files for PUID", p.puid)
         for n, (file_path, doc_path) in enumerate(
             ((p.smallest, p.smallest_doc_path), (p.biggest, p.biggest_doc_path))
         ):
@@ -165,11 +164,11 @@ def output_files(root: str, folders: List[PUIDFolder], others: Dict[str, str]):
 
 
 def main():
-    global log
+    # global log
     args = parser.parse_args()
 
-    if args.silent:
-        log = lambda *a, **kw: None
+    # if args.silent:
+    #     log = lambda *a, **kw: None
 
     paths = [
         ("master", args.master),
@@ -188,13 +187,15 @@ def main():
         os.system(f'digiarch "{args.original}" process')
 
     # collect the data for each puid
+    print("Collecting info on all files")
     puidfolders = PUIDFolders(args.original)
     puids = puidfolders.collect()
+    print("Copying files to puid-folders")
     output_files(
         args.output, puids, {"master": args.master, "statutory": args.statutory}
     )
 
-    log("Finished!")
+    print("Finished!")
 
 
 if __name__ == "__main__":
