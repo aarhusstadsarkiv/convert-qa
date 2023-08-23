@@ -3,9 +3,11 @@
 > This tool provides a way for you to easily compare files between original, master and statutory
 
 ### Installation
+
 Preferred way is to install with pipx: `pipx install git+https://github.com/aarhusstadsarkiv/convert-qa.git`
 
 ### Instructions
+
 The script requires that you specify the paths to original and master documents:
 
 - `convert-compare --master path/to/master/files --original path/to/original/files`
@@ -17,6 +19,7 @@ The tool only reads from the metadata database for the original documents.
 Default output is set to `./comparison_output`, this can be changed with `-o` and `--output`.
 
 ### Help
+
 ```
 usage: main.py [-h] [--original ORIGINAL] [--statutory STATUTORY] [--master MASTER] [-o OUTPUT] [--digiarch]
                [--silent]
@@ -34,3 +37,21 @@ options:
   --silent              only print errors
 ```
 
+## Convert-Encoding
+
+This tool takes a list of Open Document files and check the text inside the content.xml file for unusual character
+sequences.
+
+The characters are searched within tags, they must be surrounded by ASCII characters and not included in the
+optional `IGNORE` argument.
+
+```
+convert-encoding [-h] [--ignore IGNORE] files [files ...]
+
+positional arguments:                                                                                                                                                                                                          
+  files            the files to check                                                                                                                                                                                          
+                                                                                                                                                                                                                               
+options:                                                                                                                                                                                                                       
+  -h, --help       show this help message and exit
+  --ignore IGNORE  extra characters to ignore
+```
