@@ -1,4 +1,4 @@
-## Convert-qa
+## Convert-Compare
 
 > This tool provides a way for you to easily compare files between original, master and statutory
 
@@ -8,7 +8,7 @@ Preferred way is to install with pipx: `pipx install git+https://github.com/aarh
 ### Instructions
 The script requires that you specify the paths to original and master documents:
 
-- `convert-qa --master path/to/master/files --original path/to/original/files`
+- `convert-compare --master path/to/master/files --original path/to/original/files`
 
 Statutory documents can also be specified with `--statutory` but is optional
 

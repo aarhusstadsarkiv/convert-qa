@@ -8,7 +8,7 @@ authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 python = ">=3.9"
 
 [tool.poetry.scripts]
-convert-qa = "convert_qa.main:main"
+convert-compare = "convert_qa.convert.main:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
