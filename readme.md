@@ -6,9 +6,7 @@ Preferred way is to install with pipx: `pipx install git+https://github.com/aarh
 
 ## Convert-Compare
 
-> This tool provides a way for you to easily compare files between original, master and statutory
-
-### Instructions
+This tool provides a way for you to easily compare files between original, master and statutory
 
 The script requires that you specify the paths to original and master documents:
 
@@ -19,8 +17,6 @@ Statutory documents can also be specified with `--statutory` but is optional
 The tool only reads from the metadata database for the original documents.
 
 Default output is set to `./comparison_output`, this can be changed with `-o` and `--output`.
-
-### Help
 
 ```
 usage: main.py [-h] [--original ORIGINAL] [--statutory STATUTORY] [--master MASTER] [-o OUTPUT] [--digiarch]
