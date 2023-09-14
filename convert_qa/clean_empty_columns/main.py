@@ -214,6 +214,7 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
     conn.close()
 
 
+# noinspection DuplicatedCode
 def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
     echo = print_with_file(log_file)
 
