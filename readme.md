@@ -57,3 +57,22 @@ options:
   -h, --help       show this help message and exit
   --ignore IGNORE  extra characters to ignore
 ```
+
+## clean-empty-columns
+
+Take a list of databases or archive folders and check each table for empty columns (all values either null or ''). Completely empty tables will also be removed.
+
+Empty columns are removed only if the `--commit` option is used and are otherwise ignored.
+
+```
+usage: clean-empty-columns [-h] [--commit] [--log-file LOG_FILE] {archive,sqlite} files [files ...]
+
+positional arguments:
+  {archive,sqlite}     whether the files are archives or SQLite databases
+  files                the databases/archives to clean
+
+options:
+  -h, --help           show this help message and exit
+  --commit             commit changes to database
+  --log-file LOG_FILE  write change events to log file
+```
