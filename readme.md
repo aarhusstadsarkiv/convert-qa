@@ -72,3 +72,19 @@ options:
   --commit             commit changes to database
   --log-file LOG_FILE  write change events to log file
 ```
+
+## remove-tables
+
+Remove tables from a given archive.
+
+```
+clean-empty-columns [-h] [--log-file LOG_FILE] archive tables [tables ...]
+
+positional arguments:
+  archive              the path to the archive
+  tables               the tables to remove
+
+options:
+  -h, --help           show this help message and exit
+  --log-file LOG_FILE  write change events to log file
+```
