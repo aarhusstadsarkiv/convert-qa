@@ -1,12 +1,12 @@
-## Convert-Compare
+# Convert QA
 
-> This tool provides a way for you to easily compare files between original, master and statutory
-
-### Installation
+## Installation
 
 Preferred way is to install with pipx: `pipx install git+https://github.com/aarhusstadsarkiv/convert-qa.git`
 
-### Instructions
+## Convert-Compare
+
+This tool provides a way for you to easily compare files between original, master and statutory
 
 The script requires that you specify the paths to original and master documents:
 
@@ -17,8 +17,6 @@ Statutory documents can also be specified with `--statutory` but is optional
 The tool only reads from the metadata database for the original documents.
 
 Default output is set to `./comparison_output`, this can be changed with `-o` and `--output`.
-
-### Help
 
 ```
 usage: main.py [-h] [--original ORIGINAL] [--statutory STATUTORY] [--master MASTER] [-o OUTPUT] [--digiarch]
@@ -54,4 +52,23 @@ positional arguments:
 options:                                                                                                                                                                                                                       
   -h, --help       show this help message and exit
   --ignore IGNORE  extra characters to ignore
+```
+
+## clean-empty-columns
+
+Take a list of databases or archive folders and check each table for empty columns (all values either null or ''). Completely empty tables will also be removed.
+
+Empty columns are removed only if the `--commit` option is used and are otherwise ignored.
+
+```
+usage: clean-empty-columns [-h] [--commit] [--log-file LOG_FILE] {archive,sqlite} files [files ...]
+
+positional arguments:
+  {archive,sqlite}     whether the files are archives or SQLite databases
+  files                the databases/archives to clean
+
+options:
+  -h, --help           show this help message and exit
+  --commit             commit changes to database
+  --log-file LOG_FILE  write change events to log file
 ```
