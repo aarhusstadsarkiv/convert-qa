@@ -316,8 +316,9 @@ def cli():
     """
 
     parser = ArgumentParser("clean-empty-columns", description=cli.__doc__)
-    parser.add_argument("type", choices=["archive", "sqlite"])
-    parser.add_argument("files", nargs="+", type=Path, help="the databases to clean")
+    parser.add_argument("type", choices=["archive", "sqlite"],
+                        help="whether the files are archives or SQLite databases")
+    parser.add_argument("files", nargs="+", type=Path, help="the databases/archives to clean")
     parser.add_argument("--commit", action="store_true", required=False, help="commit changes to database")
     parser.add_argument("--log-file", type=Path, default=None, help="write change events to log file")
 
