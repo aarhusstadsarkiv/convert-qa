@@ -19,20 +19,16 @@ The tool only reads from the metadata database for the original documents.
 Default output is set to `./comparison_output`, this can be changed with `-o` and `--output`.
 
 ```
-usage: main.py [-h] [--original ORIGINAL] [--statutory STATUTORY] [--master MASTER] [-o OUTPUT] [--digiarch]
-               [--silent]
-
-Easily compare files between original, master and statutory
+convert-compare [-h] [--original ORIGINAL] [--master MASTER] [--statutory STATUTORY] [--output OUTPUT] [--digiarch]
 
 options:
   -h, --help            show this help message and exit
   --original ORIGINAL   directory pointing to original documents containing the metadata folder
+  --master MASTER       directory pointing to master documents
   --statutory STATUTORY
-                        (optional) directory pointing to statutory documents containing the metadata folder
-  --master MASTER       directory pointing to master documents containing the metadata folder
-  -o, --output OUTPUT   directory to output files into
+                        (optional) directory pointing to statutory documents
+  --output OUTPUT       directory to output files into
   --digiarch            generate metadata folder with digiarch
-  --silent              only print errors
 ```
 
 ## Convert-Encoding
@@ -61,7 +57,7 @@ Take a list of databases or archive folders and check each table for empty colum
 Empty columns are removed only if the `--commit` option is used and are otherwise ignored.
 
 ```
-usage: clean-empty-columns [-h] [--commit] [--log-file LOG_FILE] {archive,sqlite} files [files ...]
+clean-empty-columns [-h] [--commit] [--log-file LOG_FILE] {archive,sqlite} files [files ...]
 
 positional arguments:
   {archive,sqlite}     whether the files are archives or SQLite databases
