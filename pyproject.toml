@@ -9,7 +9,7 @@ python = ">=3.9"
 xmltodict = "^0.13.0"
 
 [tool.poetry.scripts]
-convert-compare = "convert_qa.convert.main:main"
+convert-compare = "convert_qa.compare.main:main"
 convert-encoding = "convert_qa.encoding.main:cli"
 clean-empty-columns = "convert_qa.clean_empty_columns.main:cli"
 remove-tables = "convert_qa.remove_tables.main:cli"
