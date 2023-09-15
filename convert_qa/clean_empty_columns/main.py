@@ -56,7 +56,7 @@ def sqlite_drop_table(conn: Connection, table: str):
 
 def rmdir(path: Path):
     if not path.is_dir():
-        return path.unlink()
+        return path.unlink(missing_ok=True)
 
     for item in path.iterdir():
         rmdir(item)
@@ -115,7 +115,7 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
         with out_path.open("w", encoding="utf-8") as fo:
             if not remove_columns:
                 def callback(_, row: dict):
-                    unparse_xml(row, fo, "utf-8", full_document=False)
+                    unparse_xml({"row": row}, fo, "utf-8", full_document=False)
                     fo.write("\n")
                     return True
             else:
@@ -158,7 +158,7 @@ def table_xsd_update(path: Path, table_index: int, remove_columns: list[str], ou
     ]
     for column in xsd["xs:schema"]["xs:complexType"]["xs:sequence"]["xs:element"]:
         column_index: int = int(column["@name"].removeprefix("c"))
-        if column_index < min(remove_columns_indices):
+        if column_index < min(remove_columns_indices, default=-1):
             continue
         column_index_diff: int = reduce(lambda p, c: (p + 1) if c < column_index else p, remove_columns_indices, 0)
         column["@name"] = f"c{column_index - column_index_diff}"
@@ -182,12 +182,12 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
     for table in sqlite_get_tables(conn):
         for column in sqlite_get_columns(conn, table):
             # Prepare output string
-            line = f"{file.name}/{table}/{column}... "
-            print(line, end="", flush=True)
+            line = f"{file.name}/{table}/{column}"
+            print(line, end="... ", flush=True)
 
-            if sqlite_has_value:
+            if sqlite_has_value(conn, table, column):
                 # If the column is not empty, clear the output line
-                print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+                print("\r" + (" " * (len(line) + 4)) + "\r", end="", flush=True)
             elif commit:
                 # Drop the column if there is no value and commit is set to true
                 sqlite_drop_column(conn, table, column)
@@ -214,6 +214,7 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
     conn.close()
 
 
+# noinspection DuplicatedCode
 def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
     echo = print_with_file(log_file)
 
@@ -266,44 +267,69 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
     if (tables_to_remove or columns_to_remove) and commit:
         print(f"{archive.name}/writing changes... ", end="", flush=True)
 
-        table_index_update(tables_index_path, columns_to_remove, tables_to_remove, tables_index_path)
+        try:
+            table_index_update(tables_index_path, columns_to_remove, tables_to_remove, tables_index_path)
 
-        if tables_to_remove:
-            for index in tables_to_remove:
-                rmdir(archive.joinpath("tables", f"table{index}"))
+            if tables_to_remove:
+                for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
+                    index = int(table["folder"].removeprefix("table"))
+                    table_folder: Path = archive.joinpath("tables", table["folder"])
 
-            for table in tables:
-                index = int(table["folder"].removeprefix("table"))
-                if index <= min(tables_to_remove):
-                    continue
-                _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
-                index_diff: int = reduce(lambda p, c: p + (1 if c < index else 0), tables_to_remove, 0)
-                new_index: int = index - index_diff
-                xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-                xsd_path: Path = xml_path.with_suffix(".xsd")
-                xml_path = xml_path.rename(xml_path.with_name(f"table{new_index}.xml"))
-                xsd_path = xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
-                table_xml_update(xml_path, new_index, list(_columns_to_remove), xml_path.with_name("." + xml_path.name))
-                table_xsd_update(xsd_path, new_index, list(_columns_to_remove), xsd_path)
-                xml_path.unlink(missing_ok=True)
-                xml_path.with_name("." + xml_path.name).rename(xml_path)
-                if new_index != index:
-                    xml_path.parent.rename(f"table{new_index}")
+                    if index in tables_to_remove:
+                        echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
+                        rmdir(archive.joinpath("tables", table["folder"]))
+                        continue
+                    elif index <= min(tables_to_remove, default=-1):
+                        continue
+                    elif not table_folder.is_dir():
+                        echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                        continue
 
-        if columns_to_remove:
+                    _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
+
+                    index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
+                    new_index: int = index - index_diff
+                    echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+
+                    xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
+                    xml_path_tmp = table_xml_update(xml_path, new_index, list(_columns_to_remove),
+                                                    xml_path.with_name("." + xml_path.name))
+                    xml_path.unlink(missing_ok=True)
+                    xml_path_tmp.rename(xml_path.with_name(f"table{new_index}.xml"))
+
+                    xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+                    table_xsd_update(xsd_path, new_index, list(_columns_to_remove), xsd_path)
+                    xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
+
+                    if new_index != index:
+                        xml_path.parent.rename(xml_path.parent.with_name(f"table{new_index}"))
+
             for index, column_ids in columns_to_remove:
-                if tables_to_remove and index > min(tables_to_remove):
+                if tables_to_remove and index > min(tables_to_remove, default=-1):
                     continue
                 table: dict = next((t for t in tables if t["folder"] == f"table{index}"))
-                xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-                xsd_path: Path = xml_path.with_suffix(".xsd")
+                table_folder: Path = archive.joinpath("tables", table["folder"])
+
+                if not table_folder.is_dir():
+                    echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                    continue
+
+                xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
                 table_xml_update(xml_path, index, list(column_ids), xml_path.with_name("." + xml_path.name))
-                table_xsd_update(xsd_path, index, list(column_ids), xsd_path)
                 xml_path.unlink(missing_ok=True)
                 xml_path.with_name("." + xml_path.name).rename(xml_path)
 
-        print(f"\r{archive.name}/{len(tables_to_remove)} tables "
-              f"and {len([c for _, cs in columns_to_remove for c in cs])} columns removed")
+                xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+                table_xsd_update(xsd_path, index, list(column_ids), xsd_path)
+
+            print(f"\r{archive.name}/{len(tables_to_remove)} tables "
+                  f"and {len([c for _, cs in columns_to_remove for c in cs])} columns removed")
+        except (Exception, BaseException) as err:
+            print()
+            echo("ERROR: The operation was interrupted before all changes could be written.",
+                 f"Archive {archive.name} is likely corrupted.")
+            print()
+            raise err
 
 
 def cli():
