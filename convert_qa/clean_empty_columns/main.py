@@ -182,12 +182,12 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
     for table in sqlite_get_tables(conn):
         for column in sqlite_get_columns(conn, table):
             # Prepare output string
-            line = f"{file.name}/{table}/{column}... "
-            print(line, end="", flush=True)
+            line = f"{file.name}/{table}/{column}"
+            print(line, end="... ", flush=True)
 
             if sqlite_has_value(conn, table, column):
                 # If the column is not empty, clear the output line
-                print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+                print("\r" + (" " * (len(line) + 4)) + "\r", end="", flush=True)
             elif commit:
                 # Drop the column if there is no value and commit is set to true
                 sqlite_drop_column(conn, table, column)
