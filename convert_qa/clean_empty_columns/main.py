@@ -35,7 +35,9 @@ def sqlite_has_value(conn: Connection, table: str, column: str) -> bool:
     """
     Check if any row in the table has a non-empty value in a specific column.
     """
-    return conn.execute(f"select {column} from {table} where {column} not in (null, '') limit 1").fetchone() is not None
+    return conn.execute(
+        f"select {column} from {table} where {column} is not null and {column} != '' limit 1"
+    ).fetchone() is not None
 
 
 # noinspection SqlNoDataSourceInspection,SqlResolve
