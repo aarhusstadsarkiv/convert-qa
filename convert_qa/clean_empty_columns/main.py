@@ -56,7 +56,7 @@ def sqlite_drop_table(conn: Connection, table: str):
 
 def rmdir(path: Path):
     if not path.is_dir():
-        return path.unlink()
+        return path.unlink(missing_ok=True)
 
     for item in path.iterdir():
         rmdir(item)
