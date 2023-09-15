@@ -22,15 +22,21 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     tables_index: dict = parse_xml(tables_index_path.read_text())
 
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
-    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables
-                                   if t["name"].lower() in table_names]
+    tables_to_remove: list[int] = []
+
+    for table_name in table_names:
+        table = next((t for t in tables if t["name"].lower() == table_name), None)
+
+        if not table:
+            echo(f"{archive.name}/-------/{table_name}/not found")
+            continue
+
+        echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
+        index: int = int(table["folder"].removeprefix("table"))
+        rmdir(archive.joinpath("tables", table["folder"]))
+        tables_to_remove.append(index)
 
     table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
-
-    for table_id in tables_to_remove:
-        table = next(t for t in tables if t["folder"] == f"table{table_id}")
-        echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
-        rmdir(archive.joinpath("tables", table["folder"]))
 
     for table in tables:
         index = int(table["folder"].removeprefix("table"))
