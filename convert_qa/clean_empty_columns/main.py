@@ -158,7 +158,7 @@ def table_xsd_update(path: Path, table_index: int, remove_columns: list[str], ou
     ]
     for column in xsd["xs:schema"]["xs:complexType"]["xs:sequence"]["xs:element"]:
         column_index: int = int(column["@name"].removeprefix("c"))
-        if column_index < min(remove_columns_indices):
+        if column_index < min(remove_columns_indices, default=-1):
             continue
         column_index_diff: int = reduce(lambda p, c: (p + 1) if c < column_index else p, remove_columns_indices, 0)
         column["@name"] = f"c{column_index - column_index_diff}"
@@ -275,7 +275,7 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
 
             for table in tables:
                 index = int(table["folder"].removeprefix("table"))
-                if index <= min(tables_to_remove):
+                if index <= min(tables_to_remove, default=-1):
                     continue
                 _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
                 index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
@@ -299,7 +299,7 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
 
         if columns_to_remove:
             for index, column_ids in columns_to_remove:
-                if tables_to_remove and index > min(tables_to_remove):
+                if tables_to_remove and index > min(tables_to_remove, default=-1):
                     continue
                 table: dict = next((t for t in tables if t["folder"] == f"table{index}"))
                 xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
