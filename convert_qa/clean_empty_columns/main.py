@@ -348,7 +348,7 @@ def cli():
                         help="whether the files are archives or SQLite databases")
     parser.add_argument("files", nargs="+", type=Path, help="the databases/archives to clean")
     parser.add_argument("--commit", action="store_true", required=False, help="commit changes to database")
-    parser.add_argument("--log-file", type=Path, default=None, help="write change events to log file")
+    parser.add_argument("--log-file", type=Path, required=True, help="write change events to log file")
 
     args = parser.parse_args()
 

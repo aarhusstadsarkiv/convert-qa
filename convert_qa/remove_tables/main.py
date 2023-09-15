@@ -73,7 +73,7 @@ def cli():
     parser = ArgumentParser("remove-tables", description=cli.__doc__)
     parser.add_argument("archive", type=Path, help="the path to the archive")
     parser.add_argument("tables", nargs="+", help="the tables to remove")
-    parser.add_argument("--log-file", type=Path, default=None, help="write change events to log file")
+    parser.add_argument("--log-file", type=Path, required=True, help="write change events to log file")
 
     args = parser.parse_args()
 
