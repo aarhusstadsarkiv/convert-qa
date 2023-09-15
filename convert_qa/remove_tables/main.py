@@ -22,8 +22,8 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     tables_index: dict = parse_xml(tables_index_path.read_text())
 
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
-    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables if
-                                   t["name"].lower() in table_names]
+    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables
+                                   if t["name"].lower() in table_names]
 
     table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
 
