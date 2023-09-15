@@ -38,7 +38,7 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
                 continue
             elif index <= min(tables_to_remove, default=-1):
                 continue
-            elif not table_folder:
+            elif not table_folder.is_dir():
                 echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
                 continue
 
