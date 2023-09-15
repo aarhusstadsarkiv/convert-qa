@@ -115,7 +115,7 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
         with out_path.open("w", encoding="utf-8") as fo:
             if not remove_columns:
                 def callback(_, row: dict):
-                    unparse_xml(row, fo, "utf-8", full_document=False)
+                    unparse_xml({"row": row}, fo, "utf-8", full_document=False)
                     fo.write("\n")
                     return True
             else:
