@@ -45,14 +45,17 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
         index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
         new_index: int = index - index_diff
         echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+
         xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-        xsd_path: Path = xml_path.with_suffix(".xsd")
-        xml_path = xml_path.rename(xml_path.with_name(f"table{new_index}.xml"))
-        xsd_path = xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
-        table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
-        table_xsd_update(xsd_path, new_index, [], xsd_path)
+        xml_path_tmp = table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
         xml_path.unlink(missing_ok=True)
-        xml_path.with_name("." + xml_path.name).rename(xml_path)
+        xml_path_tmp.rename(xml_path)
+        xml_path_tmp.rename(xml_path_tmp.with_name(f"table{new_index}.xml"))
+
+        xsd_path: Path = xml_path.with_suffix(".xsd")
+        table_xsd_update(xsd_path, new_index, [], xsd_path)
+        xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
+
         if new_index != index:
             xml_path.parent.rename(f"table{new_index}")
 
