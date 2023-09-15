@@ -22,42 +22,47 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     tables_index: dict = parse_xml(tables_index_path.read_text())
 
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
-    tables_to_remove: list[int] = []
+    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables
+                                   if t["name"].lower() in table_names]
 
-    for table_name in table_names:
-        table = next((t for t in tables if t["name"].lower() == table_name), None)
+    try:
+        table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
 
-        if not table:
-            echo(f"{archive.name}/-------/{table_name}/not found")
-            continue
+        for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
+            index = int(table["folder"].removeprefix("table"))
+            table_folder: Path = archive.joinpath("tables", table["folder"])
 
-        echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
-        index: int = int(table["folder"].removeprefix("table"))
-        rmdir(archive.joinpath("tables", table["folder"]))
-        tables_to_remove.append(index)
+            if index in tables_to_remove:
+                echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
+                rmdir(archive.joinpath("tables", table["folder"]))
+                continue
+            elif index <= min(tables_to_remove, default=-1):
+                continue
+            elif not table_folder:
+                echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                continue
 
-    table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
+            index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
+            new_index: int = index - index_diff
+            echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
 
-    for table in tables:
-        index = int(table["folder"].removeprefix("table"))
-        if index <= min(tables_to_remove):
-            continue
-        index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
-        new_index: int = index - index_diff
-        echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+            xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
+            xml_path_tmp = table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
+            xml_path.unlink(missing_ok=True)
+            xml_path_tmp.rename(xml_path.with_name(f"table{new_index}.xml"))
 
-        xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-        xml_path_tmp = table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
-        xml_path.unlink(missing_ok=True)
-        xml_path_tmp.rename(xml_path)
-        xml_path_tmp.rename(xml_path_tmp.with_name(f"table{new_index}.xml"))
+            xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+            table_xsd_update(xsd_path, new_index, [], xsd_path)
+            xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
 
-        xsd_path: Path = xml_path.with_suffix(".xsd")
-        table_xsd_update(xsd_path, new_index, [], xsd_path)
-        xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
-
-        if new_index != index:
-            xml_path.parent.rename(f"table{new_index}")
+            if new_index != index:
+                xml_path.parent.rename(xml_path.parent.with_name(f"table{new_index}"))
+    except (Exception, BaseException) as err:
+        print()
+        echo("ERROR: The operation was interrupted before all changes could be written.",
+             f"Archive {archive.name} is likely corrupted.")
+        print()
+        raise err
 
 
 def cli():
