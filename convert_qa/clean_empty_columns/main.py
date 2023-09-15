@@ -308,12 +308,19 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
                 if tables_to_remove and index > min(tables_to_remove, default=-1):
                     continue
                 table: dict = next((t for t in tables if t["folder"] == f"table{index}"))
-                xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-                xsd_path: Path = xml_path.with_suffix(".xsd")
+                table_folder: Path = archive.joinpath("tables", table["folder"])
+
+                if not table_folder.is_dir():
+                    echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                    continue
+
+                xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
                 table_xml_update(xml_path, index, list(column_ids), xml_path.with_name("." + xml_path.name))
-                table_xsd_update(xsd_path, index, list(column_ids), xsd_path)
                 xml_path.unlink(missing_ok=True)
                 xml_path.with_name("." + xml_path.name).rename(xml_path)
+
+                xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+                table_xsd_update(xsd_path, index, list(column_ids), xsd_path)
 
             print(f"\r{archive.name}/{len(tables_to_remove)} tables "
                   f"and {len([c for _, cs in columns_to_remove for c in cs])} columns removed")
