@@ -278,16 +278,22 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
                 if index <= min(tables_to_remove):
                     continue
                 _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
-                index_diff: int = reduce(lambda p, c: p + (1 if c < index else 0), tables_to_remove, 0)
+                index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
                 new_index: int = index - index_diff
+
+                echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+
                 xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-                xsd_path: Path = xml_path.with_suffix(".xsd")
-                xml_path = xml_path.rename(xml_path.with_name(f"table{new_index}.xml"))
-                xsd_path = xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
-                table_xml_update(xml_path, new_index, list(_columns_to_remove), xml_path.with_name("." + xml_path.name))
-                table_xsd_update(xsd_path, new_index, list(_columns_to_remove), xsd_path)
+                xml_path_tmp = table_xml_update(xml_path, new_index, list(_columns_to_remove),
+                                                xml_path.with_name("." + xml_path.name))
                 xml_path.unlink(missing_ok=True)
-                xml_path.with_name("." + xml_path.name).rename(xml_path)
+                xml_path_tmp.rename(xml_path)
+                xml_path_tmp.rename(xml_path_tmp.with_name(f"table{new_index}.xml"))
+
+                xsd_path: Path = xml_path.with_suffix(".xsd")
+                table_xsd_update(xsd_path, new_index, list(_columns_to_remove), xsd_path)
+                xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
+
                 if new_index != index:
                     xml_path.parent.rename(f"table{new_index}")
 
