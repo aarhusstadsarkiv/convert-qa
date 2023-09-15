@@ -70,7 +70,7 @@ def cli():
     Remove tables from a given archive.
     """
 
-    parser = ArgumentParser("clean-empty-columns", description=cli.__doc__)
+    parser = ArgumentParser("remove-tables", description=cli.__doc__)
     parser.add_argument("archive", type=Path, help="the path to the archive")
     parser.add_argument("tables", nargs="+", help="the tables to remove")
     parser.add_argument("--log-file", type=Path, default=None, help="write change events to log file")

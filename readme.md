@@ -74,7 +74,7 @@ options:
 Remove tables from a given archive.
 
 ```
-clean-empty-columns [-h] [--log-file LOG_FILE] archive tables [tables ...]
+remove-tables [-h] [--log-file LOG_FILE] archive tables [tables ...]
 
 positional arguments:
   archive              the path to the archive
