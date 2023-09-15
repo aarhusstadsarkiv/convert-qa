@@ -185,7 +185,7 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
             line = f"{file.name}/{table}/{column}... "
             print(line, end="", flush=True)
 
-            if sqlite_has_value:
+            if sqlite_has_value(conn, table, column):
                 # If the column is not empty, clear the output line
                 print("\r" + (" " * len(line)) + "\r", end="", flush=True)
             elif commit:
