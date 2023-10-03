@@ -199,28 +199,33 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
                     columns_to_remove[table] = columns_to_remove.get(table, []) + [column]
 
     if columns_to_remove and commit:
-        for table, columns in columns_to_remove.items():
-            if set(columns) == set(sqlite_get_columns(conn, table)):
-                # If all columns are empty, remove table
-                print(f"{file.name}/{table}/removing...", end="", flush=True)
-                sqlite_drop_table(conn, table)
-                echo(f"\r{file.name}/{table}/removed    ")
-            else:
-                # Remove one column at a time
-                for column in columns:
-                    print(f"{file.name}/{table}/{column}/removing...", end="", flush=True)
-                    sqlite_drop_column(conn, table, column)
-                    echo(f"\r{file.name}/{table}/{column}/removed    ")
+        try:
+            for table, columns in columns_to_remove.items():
+                if set(columns) == set(sqlite_get_columns(conn, table)):
+                    # If all columns are empty, remove table
+                    print(f"{file.name}/{table}/removing...", end="", flush=True)
+                    sqlite_drop_table(conn, table)
+                    echo(f"\r{file.name}/{table}/removed    ")
+                else:
+                    # Remove one column at a time
+                    for column in columns:
+                        print(f"{file.name}/{table}/{column}/removing...", end="", flush=True)
+                        sqlite_drop_column(conn, table, column)
+                        echo(f"\r{file.name}/{table}/{column}/removed    ")
 
-        # Show temporary message during cleanup
-        line = f"{file.name}/cleaning..."
-        print(line, end="", flush=True)
+            # Show temporary message during cleanup
+            line = f"{file.name}/cleaning..."
+            print(line, end="", flush=True)
 
-        # Commit all changes and clean the database with vacuum
-        conn.commit()
-        conn.execute("vacuum")
+            # Commit all changes and clean the database with vacuum
+            conn.commit()
+            conn.execute("vacuum")
 
-        print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+            print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+        except Exception as err:
+            echo(f"ERROR: {err!r}")
+            echo("ERROR: Changes interrupted before committing")
+            raise
 
     conn.close()
 
