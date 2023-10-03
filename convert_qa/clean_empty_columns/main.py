@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from datetime import datetime
 from functools import reduce
+from os import environ
 from pathlib import Path
 from sqlite3 import Connection
 from sqlite3 import connect
@@ -178,8 +179,10 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
     print(file.name)
 
     # Connect to the database
+    environ["SQLITE_TMPDIR"] = str(file.parent.resolve())
     conn: Connection = connect(file)
-    clean: bool = False
+
+    columns_to_remove: dict[str, list[str]] = {}
 
     for table in sqlite_get_tables(conn):
         for column in sqlite_get_columns(conn, table):
@@ -190,28 +193,39 @@ def clean_sqlite(file: Path, commit: bool, log_file: Optional[Path]):
             if sqlite_has_value(conn, table, column):
                 # If the column is not empty, clear the output line
                 print("\r" + (" " * (len(line) + 4)) + "\r", end="", flush=True)
-            elif commit:
-                # Drop the column if there is no value and commit is set to true
-                sqlite_drop_column(conn, table, column)
-                clean = True
-                echo(f"\r{line}/removed")
             else:
                 echo(f"\r{line}/empty")
+                if commit:
+                    columns_to_remove[table] = columns_to_remove.get(table, []) + [column]
 
-        if commit and not sqlite_get_columns(conn, table):
-            sqlite_drop_table(conn, table)
-            echo(f"{file.name}/{table}/removed")
+    if columns_to_remove and commit:
+        try:
+            for table, columns in columns_to_remove.items():
+                if set(columns) == set(sqlite_get_columns(conn, table)):
+                    # If all columns are empty, remove table
+                    print(f"{file.name}/{table}/removing...", end="", flush=True)
+                    sqlite_drop_table(conn, table)
+                    echo(f"\r{file.name}/{table}/removed    ")
+                else:
+                    # Remove one column at a time
+                    for column in columns:
+                        print(f"{file.name}/{table}/{column}/removing...", end="", flush=True)
+                        sqlite_drop_column(conn, table, column)
+                        echo(f"\r{file.name}/{table}/{column}/removed    ")
 
-    if clean and commit:
-        # Show temporary message during cleanup
-        line = f"{file.name}/cleaning..."
-        print(line, end="", flush=True)
+            # Show temporary message during cleanup
+            line = f"{file.name}/cleaning..."
+            print(line, end="", flush=True)
 
-        # Commit all changes and clean the database with vacuum
-        conn.commit()
-        conn.execute("vacuum")
+            # Commit all changes and clean the database with vacuum
+            conn.commit()
+            conn.execute("vacuum")
 
-        print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+            print("\r" + (" " * len(line)) + "\r", end="", flush=True)
+        except Exception as err:
+            echo(f"ERROR: {err!r}")
+            echo("ERROR: Changes interrupted before committing")
+            raise
 
     conn.close()
 
@@ -348,7 +362,7 @@ def cli():
                         help="whether the files are archives or SQLite databases")
     parser.add_argument("files", nargs="+", type=Path, help="the databases/archives to clean")
     parser.add_argument("--commit", action="store_true", required=False, help="commit changes to database")
-    parser.add_argument("--log-file", type=Path, default=None, help="write change events to log file")
+    parser.add_argument("--log-file", type=Path, required=True, help="write change events to log file")
 
     args = parser.parse_args()
 
