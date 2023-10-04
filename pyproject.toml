@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "convert-qa"
-version = "0.4.3"
+version = "0.5.0"
 description = "Enables easy comparison of original files to ets converted master copies"
 authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 
@@ -12,6 +12,7 @@ xmltodict = "^0.13.0"
 convert-compare = "convert_qa.compare.main:main"
 convert-encoding = "convert_qa.encoding.main:cli"
 clean-empty-columns = "convert_qa.clean_empty_columns.main:cli"
+remove-duplicate-rows = "convert_qa.remove_duplicate_rows.main:cli"
 remove-tables = "convert_qa.remove_tables.main:cli"
 
 [build-system]
