@@ -70,7 +70,7 @@ options:
   --log-file LOG_FILE  write change events to log file
 ```
 
-## remove-duplicate-columns
+## remove-duplicate-rows
 
 Remove duplicate rows from a SQLite database.
 
