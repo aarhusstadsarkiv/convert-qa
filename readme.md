@@ -52,7 +52,8 @@ options:
 
 ## clean-empty-columns
 
-Take a list of databases or archive folders and check each table for empty columns (all values either null or ''). Completely empty tables will also be removed.
+Take a list of databases or archive folders and check each table for empty columns (all values either null or '').
+Completely empty tables will also be removed.
 
 Empty columns are removed only if the `--commit` option is used and are otherwise ignored.
 
@@ -64,6 +65,22 @@ positional arguments:
   files                the databases/archives to clean
 
 options:
+  -h, --help           show this help message and exit
+  --commit             commit changes to database
+  --log-file LOG_FILE  write change events to log file
+```
+
+## remove-duplicate-columns
+
+Remove duplicate rows from a SQLite database.
+
+```
+remove-duplicate-rows [-h] [--commit] --log-file LOG_FILE file [file ...]       
+
+positional arguments:                                                           
+  file                 the path to the database file                            
+                                                                                
+options:                                                                        
   -h, --help           show this help message and exit
   --commit             commit changes to database
   --log-file LOG_FILE  write change events to log file
