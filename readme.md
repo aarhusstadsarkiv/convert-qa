@@ -74,6 +74,8 @@ options:
 
 Remove duplicate rows from a SQLite database.
 
+Duplicate rows are removed only if the `--commit` option is used and are otherwise ignored.
+
 ```
 remove-duplicate-rows [-h] [--commit] --log-file LOG_FILE file [file ...]       
 
