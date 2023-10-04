@@ -13,14 +13,12 @@ def has_primary_keys(conn: Connection, table: str) -> bool:
 
 # noinspection SqlNoDataSourceInspection
 def count_rows(conn: Connection, table: str) -> int:
-    cursor = conn.execute(f"select count(ROWID) from {table}")
-    return cursor.fetchone()[0]
+    return conn.execute(f"select count(ROWID) from {table}").fetchone()[0]
 
 
 # noinspection SqlNoDataSourceInspection
 def count_unique_rows(conn: Connection, table: str) -> int:
-    cursor = conn.execute(f"select count(*) from (select distinct * from {table})")
-    return cursor.fetchone()[0]
+    return conn.execute(f"select count(*) from (select distinct * from {table})").fetchone()[0]
 
 
 # noinspection SqlNoDataSourceInspection
