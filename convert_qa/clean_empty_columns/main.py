@@ -247,7 +247,8 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
         line: str = f"{archive.name}/{table['folder']}/{table['name']}..."
         print(line, end="", flush=True)
         xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-        columns: list[dict] = table["columns"]["column"]
+        columns_attr: list[dict] | dict = table.get("columns", {}).get("column", [])
+        columns: list[dict] = columns_attr if isinstance(columns_attr, list) else [columns_attr]
         empty_columns: set[str] = {c["columnID"] for c in columns}
 
         def callback(_, row):
