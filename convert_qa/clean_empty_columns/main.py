@@ -304,9 +304,12 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
                         continue
 
                     _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
-
                     index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
                     new_index: int = index - index_diff
+
+                    if not index_diff and not _columns_to_remove:
+                        continue
+
                     echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
 
                     xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
