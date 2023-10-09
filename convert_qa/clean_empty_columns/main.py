@@ -243,16 +243,14 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
     tables_to_remove: list[int] = []
     columns_to_remove: list[tuple[int, set[str]]] = []
 
-    for table in tables[:2]:
+    for table in tables:
         line: str = f"{archive.name}/{table['folder'][0]}/{table['name'][0]}..."
         print(line, end="", flush=True)
         xml_path: Path = archive.joinpath("tables", table["folder"][0], table["folder"][0]).with_suffix(".xml")
         columns: list[dict] = table["columns"][0]["column"]
         empty_columns: set[str] = {c["columnID"][0] for c in columns}
-        index = {"n": 0}
 
         def callback(_, row):
-            index["n"] += 1
             _empty_columns: list[str] = []
 
             for col_id in empty_columns:
@@ -265,7 +263,7 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
 
             empty_columns.difference_update(_empty_columns)
 
-            return len(empty_columns) > 0 and index["n"] < 10000
+            return len(empty_columns) > 0
 
         try:
             parse_xml(xml_path.open("rb"), item_depth=2, item_callback=callback)
