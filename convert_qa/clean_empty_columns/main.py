@@ -95,8 +95,9 @@ def table_index_update(path: Path, remove_columns: list[tuple[int, set[str]]], r
         index -= reduce(lambda p, c: (p + 1) if c < index else p, remove_tables, 0)
         table["folder"] = f"table{index}"
         _remove_columns: set[str] = next((cs for t, cs in remove_columns if t == index), set())
-        table["columns"]["column"] = [c for c in table["columns"]["column"]
-                                      if c["columnID"] not in _remove_columns]
+        columns_attr: list[dict] | dict = table.get("columns", {}).get("column", [])
+        columns: list[dict] = columns_attr if isinstance(columns_attr, list) else [columns_attr]
+        table["columns"]["column"] = [c for c in columns if c["columnID"] not in _remove_columns]
         for column in table["columns"]["column"]:
             col_id: int = int(column["columnID"].removeprefix("c"))
             col_id -= reduce(lambda p, c: (p + 1) if int(c.removeprefix("c")) < col_id else p, _remove_columns, 0)
