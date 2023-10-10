@@ -152,7 +152,11 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
 
                 chunk: bytes = bytes(5)
                 while chunk != b"<row>":
-                    chunk = chunk[1:] + fi.read(1)
+                    new_byte: bytes = fi.read(1)
+                    if not new_byte:
+                        chunk = "</table>".encode()
+                        break
+                    chunk = chunk[1:] + new_byte
 
                 while chunk:
                     fo.write(chunk)
