@@ -84,25 +84,24 @@ def table_index_update(path: Path, remove_columns: list[tuple[int, set[str]]], r
                        out_path: Optional[Path] = None) -> Path:
     out_path = out_path or path.with_suffix(".new" + path.suffix)
 
-    tables_index = parse_xml(path.read_text())
+    tables_index = parse_xml(path.read_text(), force_list=True)
     new_table_index = deepcopy(tables_index)
-    new_table_index["siardDiark"]["tables"]["table"] = []
+    new_table_index["siardDiark"][0]["tables"][0]["table"] = []
 
-    for table in deepcopy(tables_index["siardDiark"]["tables"]["table"]):
-        index: int = int(table["folder"].removeprefix("table"))
+    for table in deepcopy(tables_index["siardDiark"][0]["tables"][0]["table"]):
+        index: int = int(table["folder"][0].removeprefix("table"))
         if index in remove_tables:
             continue
         index -= reduce(lambda p, c: (p + 1) if c < index else p, remove_tables, 0)
-        table["folder"] = f"table{index}"
+        table["folder"][0] = f"table{index}"
         _remove_columns: set[str] = next((cs for t, cs in remove_columns if t == index), set())
-        columns_attr: list[dict] | dict = table.get("columns", {}).get("column", [])
-        columns: list[dict] = columns_attr if isinstance(columns_attr, list) else [columns_attr]
-        table["columns"]["column"] = [c for c in columns if c["columnID"] not in _remove_columns]
-        for column in table["columns"]["column"]:
-            col_id: int = int(column["columnID"].removeprefix("c"))
+        columns: list[dict] = table["columns"][0]["column"]
+        table["columns"][0]["column"] = [c for c in columns if c["columnID"][0] not in _remove_columns]
+        for column in table["columns"][0]["column"]:
+            col_id: int = int(column["columnID"][0].removeprefix("c"))
             col_id -= reduce(lambda p, c: (p + 1) if int(c.removeprefix("c")) < col_id else p, _remove_columns, 0)
-            column["columnID"] = f"c{col_id}"
-        new_table_index["siardDiark"]["tables"]["table"].append(table)
+            column["columnID"][0] = f"c{col_id}"
+        new_table_index["siardDiark"][0]["tables"][0]["table"].append(table)
 
     with out_path.open("w") as fh:
         unparse_xml(new_table_index, fh, "utf-8")
@@ -141,7 +140,7 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
                 f'xsi:schemaLocation="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd ./table{index}.xsd" '
                 f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
                 f'xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd">\n')
-            parse_xml(fi, item_depth=2, item_callback=callback)
+            parse_xml(fi, item_depth=2, item_callback=callback, force_list=True)
             fo.write('</table>')
 
     return out_path
@@ -152,20 +151,20 @@ def table_xsd_update(path: Path, table_index: int, remove_columns: list[str], ou
     remove_columns_indices = [int(c.removeprefix("c")) for c in remove_columns]
     out_path = out_path or path.with_suffix(".new" + path.suffix)
 
-    xsd = parse_xml(path.open("rb"), "utf-8")
-    xsd["xs:schema"]["@xmlns"] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
-    xsd["xs:schema"]["@targetNamespace"] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
-    xsd["xs:schema"]["xs:complexType"]["xs:sequence"]["xs:element"] = [
+    xsd = parse_xml(path.open("rb"), "utf-8", force_list=True)
+    xsd["xs:schema"][0]["@xmlns"][0] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
+    xsd["xs:schema"][0]["@targetNamespace"][0] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
+    xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"] = [
         column
-        for column in xsd["xs:schema"]["xs:complexType"]["xs:sequence"]["xs:element"]
-        if column['@name'] not in remove_columns
+        for column in xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"]
+        if column['@name'][0] not in remove_columns
     ]
-    for column in xsd["xs:schema"]["xs:complexType"]["xs:sequence"]["xs:element"]:
-        column_index: int = int(column["@name"].removeprefix("c"))
+    for column in xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"]:
+        column_index: int = int(column["@name"][0].removeprefix("c"))
         if column_index < min(remove_columns_indices, default=-1):
             continue
         column_index_diff: int = reduce(lambda p, c: (p + 1) if c < column_index else p, remove_columns_indices, 0)
-        column["@name"] = f"c{column_index - column_index_diff}"
+        column["@name"][0] = f"c{column_index - column_index_diff}"
 
     with out_path.open("w") as fh:
         unparse_xml(xsd, fh, "utf-8")
@@ -238,19 +237,18 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
     print(archive.name)
 
     tables_index_path: Path = archive.joinpath("Indices", "tableIndex.xml")
-    tables_index: dict = parse_xml(tables_index_path.read_text())
+    tables_index: dict = parse_xml(tables_index_path.read_text(), force_list=True)
 
-    tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
+    tables: list[dict] = tables_index["siardDiark"][0]["tables"][0]["table"]
     tables_to_remove: list[int] = []
     columns_to_remove: list[tuple[int, set[str]]] = []
 
     for table in tables:
-        line: str = f"{archive.name}/{table['folder']}/{table['name']}..."
+        line: str = f"{archive.name}/{table['folder'][0]}/{table['name'][0]}..."
         print(line, end="", flush=True)
-        xml_path: Path = archive.joinpath("tables", table["folder"], table["folder"]).with_suffix(".xml")
-        columns_attr: list[dict] | dict = table.get("columns", {}).get("column", [])
-        columns: list[dict] = columns_attr if isinstance(columns_attr, list) else [columns_attr]
-        empty_columns: set[str] = {c["columnID"] for c in columns}
+        xml_path: Path = archive.joinpath("tables", table["folder"][0], table["folder"][0]).with_suffix(".xml")
+        columns: list[dict] = table["columns"][0]["column"]
+        empty_columns: set[str] = {c["columnID"][0] for c in columns}
 
         def callback(_, row):
             _empty_columns: list[str] = []
@@ -273,49 +271,51 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
             pass
 
         if len(empty_columns) == len(columns):
-            tables_to_remove.append(int(table["folder"].removeprefix("table")))
-            echo(f"\r{archive.name}/{table['folder']}/{table['name']}/empty")
+            tables_to_remove.append(int(table["folder"][0].removeprefix("table")))
+            echo(f"\r{archive.name}/{table['folder'][0]}/{table['name'][0]}/empty")
         elif empty_columns:
-            columns_to_remove.append((int(table["folder"].removeprefix("table")), empty_columns))
-            for column in [c for c in columns if c["columnID"] in empty_columns]:
-                echo(f"\r{archive.name}/{table['folder']}/{table['name']}/{column['columnID']}/{column['name']}/empty")
+            columns_to_remove.append((int(table["folder"][0].removeprefix("table")), empty_columns))
+            for column in [c for c in columns if c["columnID"][0] in empty_columns]:
+                echo(f"\r{archive.name}/{table['folder'][0]}/{table['name'][0]}/"
+                     f"{column['columnID'][0]}/{column['name'][0]}/empty")
         else:
             print("\r" + (" " * len(line)) + "\r", end="", flush=True)
 
     if (tables_to_remove or columns_to_remove) and commit:
-        print(f"{archive.name}/writing changes... ", end="", flush=True)
-
         try:
             table_index_update(tables_index_path, columns_to_remove, tables_to_remove, tables_index_path)
 
             if tables_to_remove:
-                for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
-                    index = int(table["folder"].removeprefix("table"))
-                    table_folder: Path = archive.joinpath("tables", table["folder"])
+                for table in sorted(tables, key=lambda t: int(t["folder"][0].removeprefix("table"))):
+                    index = int(table["folder"][0].removeprefix("table"))
+                    table_folder: Path = archive.joinpath("tables", table["folder"][0])
 
                     if index in tables_to_remove:
-                        echo(f"{archive.name}/{table['folder']}/{table['name']}/removed")
-                        rmdir(archive.joinpath("tables", table["folder"]))
+                        echo(f"{archive.name}/{table['folder'][0]}/{table['name'][0]}/removed")
+                        rmdir(archive.joinpath("tables", table["folder"][0]))
                         continue
                     elif index <= min(tables_to_remove, default=-1):
                         continue
                     elif not table_folder.is_dir():
-                        echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                        echo(f"{archive.name}/{table['folder'][0]}/{table['name'][0]}/folder not found")
                         continue
 
                     _columns_to_remove: set[str] = next((cs for t, cs in columns_to_remove if t == index), set())
-
                     index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
                     new_index: int = index - index_diff
-                    echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
 
-                    xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
+                    if not index_diff and not _columns_to_remove:
+                        continue
+
+                    echo(f"{archive.name}/{table['folder'][0]}/{table['name'][0]}/moved to table{new_index}")
+
+                    xml_path: Path = table_folder.joinpath(table["folder"][0]).with_suffix(".xml")
                     xml_path_tmp = table_xml_update(xml_path, new_index, list(_columns_to_remove),
                                                     xml_path.with_name("." + xml_path.name))
                     xml_path.unlink(missing_ok=True)
                     xml_path_tmp.rename(xml_path.with_name(f"table{new_index}.xml"))
 
-                    xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+                    xsd_path: Path = table_folder.joinpath(table["folder"][0]).with_suffix(".xsd")
                     table_xsd_update(xsd_path, new_index, list(_columns_to_remove), xsd_path)
                     xsd_path.rename(xsd_path.with_name(f"table{new_index}.xsd"))
 
@@ -325,19 +325,19 @@ def clean_xml(archive: Path, commit: bool, log_file: Optional[Path]):
             for index, column_ids in columns_to_remove:
                 if tables_to_remove and index > min(tables_to_remove, default=-1):
                     continue
-                table: dict = next((t for t in tables if t["folder"] == f"table{index}"))
-                table_folder: Path = archive.joinpath("tables", table["folder"])
+                table: dict = next((t for t in tables if t["folder"][0] == f"table{index}"))
+                table_folder: Path = archive.joinpath("tables", table["folder"][0])
 
                 if not table_folder.is_dir():
-                    echo(f"{archive.name}/{table['folder']}/{table['name']}/folder not found")
+                    echo(f"{archive.name}/{table['folder'][0]}/{table['name'][0]}/folder not found")
                     continue
 
-                xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
+                xml_path: Path = table_folder.joinpath(table["folder"][0]).with_suffix(".xml")
                 table_xml_update(xml_path, index, list(column_ids), xml_path.with_name("." + xml_path.name))
                 xml_path.unlink(missing_ok=True)
                 xml_path.with_name("." + xml_path.name).rename(xml_path)
 
-                xsd_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xsd")
+                xsd_path: Path = table_folder.joinpath(table["folder"][0]).with_suffix(".xsd")
                 table_xsd_update(xsd_path, index, list(column_ids), xsd_path)
 
             print(f"\r{archive.name}/{len(tables_to_remove)} tables "
@@ -374,3 +374,7 @@ def cli():
     elif args.type == "archive":
         for archive in args.files:
             clean_xml(archive, args.commit, args.log_file)
+
+
+if __name__ == '__main__':
+    cli()
