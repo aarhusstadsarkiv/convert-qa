@@ -46,6 +46,7 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
             new_index: int = index - index_diff
 
             if not index_diff:
+                echo(f"{archive.name}/{table['folder']}/{table['name']}/not modified")
                 continue
 
             echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
