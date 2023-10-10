@@ -44,6 +44,10 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
 
             index_diff: int = reduce(lambda p, c: (p + 1) if c < index else p, tables_to_remove, 0)
             new_index: int = index - index_diff
+
+            if not index_diff:
+                continue
+
             echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
 
             xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
