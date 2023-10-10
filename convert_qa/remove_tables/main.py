@@ -26,8 +26,6 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     tables_to_remove = [ti for ti in tables_to_remove if ti in table_ids]
 
     try:
-        table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
-
         for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
             index = int(table["folder"].removeprefix("table"))
             table_folder: Path = archive.joinpath("tables", table["folder"])
@@ -62,6 +60,8 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
 
             if new_index != index:
                 xml_path.parent.rename(xml_path.parent.with_name(f"table{new_index}"))
+
+        table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
     except (Exception, BaseException) as err:
         print()
         echo("ERROR: The operation was interrupted before all changes could be written.",
