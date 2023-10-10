@@ -16,14 +16,14 @@ from ..clean_empty_columns.main import table_xsd_update
 def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     echo = print_with_file(log_file)
 
-    table_names = list(map(str.lower, table_names))
+    table_ids: list[int] = [int(t.removeprefix("table")) for t in map(str.lower, table_names)]
 
     tables_index_path: Path = archive.joinpath("Indices", "tableIndex.xml")
     tables_index: dict = parse_xml(tables_index_path.read_text())
 
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
-    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables
-                                   if t["name"].lower() in table_names]
+    tables_to_remove: list[int] = [int(t["folder"].lower().removeprefix("table")) for t in tables]
+    tables_to_remove = [ti for ti in tables_to_remove if ti in table_ids]
 
     try:
         table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
