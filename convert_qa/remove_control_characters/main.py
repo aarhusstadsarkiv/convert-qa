@@ -81,7 +81,7 @@ def cli():
     17, 18, 19, 1a, 1c, 1d, 1e, 1f.
     """
 
-    parser = ArgumentParser("remove_control_characters", description=cli.__doc__)
+    parser = ArgumentParser("remove-control-characters", description=cli.__doc__)
     parser.add_argument("file", type=Path, nargs="+", help="the path to the file")
     parser.add_argument("--commit", action="store_true", required=False, help="commit changes to file")
     parser.add_argument("--keep", action="store_true", required=False, help="keep original file")
