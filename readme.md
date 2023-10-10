@@ -70,6 +70,30 @@ options:
   --log-file LOG_FILE  write change events to log file
 ```
 
+## remove-control-characters
+
+Remove control characters from a text file.
+
+Removed characters are: 00, 01, 02, 03, 04, 05, 06, 0b, 0e, 0f, 10, 11, 12, 13, 14, 15, 16,
+17, 18, 19, 1a, 1c, 1d, 1e, 1f.
+
+Characters are removed from the file(s) only if the `--commit` option is used.
+
+To preserver the original file, use the `--keep` option.
+
+```
+remove-control-characters [-h] [--commit] [--keep] --log-file LOG_FILE file [file ...]                                                                      
+                                                                                                                                                                       
+positional arguments:                                                                                                                                                  
+  file                 the path to the file                                                                                                                            
+                                                                                                                                                                       
+options:                                                                                                                                                               
+  -h, --help           show this help message and exit
+  --commit             commit changes to file
+  --keep               keep original file
+  --log-file LOG_FILE  write change events to log file
+```
+
 ## remove-duplicate-rows
 
 Remove duplicate rows from a SQLite database.
