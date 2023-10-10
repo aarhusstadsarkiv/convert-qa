@@ -47,7 +47,7 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
                 echo(f"{archive.name}/{table['folder']}/{table['name']}/not modified")
                 continue
 
-            echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+            print(f"{archive.name}/{table['folder']}/{table['name']}/moving to table{new_index}", end="", flush=True)
 
             xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
             xml_path_tmp = table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
@@ -60,6 +60,8 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
 
             if new_index != index:
                 xml_path.parent.rename(xml_path.parent.with_name(f"table{new_index}"))
+
+            echo(f"\r{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}   ")
 
         table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
     except (Exception, BaseException) as err:
