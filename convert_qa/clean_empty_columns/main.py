@@ -84,7 +84,7 @@ def table_index_update(path: Path, remove_columns: list[tuple[int, set[str]]], r
                        out_path: Optional[Path] = None) -> Path:
     out_path = out_path or path.with_suffix(".new" + path.suffix)
 
-    tables_index = parse_xml(path.read_text(), force_list=True)
+    tables_index = parse_xml(path.read_text("utf-8"), force_list=True)
     new_table_index = deepcopy(tables_index)
     new_table_index["siardDiark"][0]["tables"][0]["table"] = []
 
