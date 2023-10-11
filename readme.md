@@ -131,10 +131,8 @@ options:
 
 Remove tables from a given archive.
 
-Use `@empty` as tables argument to automatically remove all tables with no rows.
-
 ```
-remove-tables [-h] [--log-file LOG_FILE] archive tables [tables ...]
+remove-tables [-h] [--empty-tables] --log-file LOG_FILE archive [tables ...]
 
 positional arguments:
   archive              the path to the archive
@@ -142,5 +140,6 @@ positional arguments:
 
 options:
   -h, --help           show this help message and exit
+  --empty-tables       remove all empty tables
   --log-file LOG_FILE  write change events to log file
 ```
