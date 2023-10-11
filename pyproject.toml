@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "convert-qa"
-version = "0.6.1"
+version = "0.6.3"
 description = "Enables easy comparison of original files to ets converted master copies"
 authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 

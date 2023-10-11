@@ -16,18 +16,16 @@ from ..clean_empty_columns.main import table_xsd_update
 def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     echo = print_with_file(log_file)
 
-    table_names = list(map(str.lower, table_names))
+    table_ids: list[int] = [int(t.removeprefix("table")) for t in map(str.lower, table_names)]
 
     tables_index_path: Path = archive.joinpath("Indices", "tableIndex.xml")
     tables_index: dict = parse_xml(tables_index_path.read_text())
 
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
-    tables_to_remove: list[int] = [int(t["folder"].removeprefix("table")) for t in tables
-                                   if t["name"].lower() in table_names]
+    tables_to_remove: list[int] = [int(t["folder"].lower().removeprefix("table")) for t in tables]
+    tables_to_remove = [ti for ti in tables_to_remove if ti in table_ids]
 
     try:
-        table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
-
         for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
             index = int(table["folder"].removeprefix("table"))
             table_folder: Path = archive.joinpath("tables", table["folder"])
@@ -46,9 +44,10 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
             new_index: int = index - index_diff
 
             if not index_diff:
+                echo(f"{archive.name}/{table['folder']}/{table['name']}/not modified")
                 continue
 
-            echo(f"{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}")
+            print(f"{archive.name}/{table['folder']}/{table['name']}/moving to table{new_index}", end="", flush=True)
 
             xml_path: Path = table_folder.joinpath(table["folder"]).with_suffix(".xml")
             xml_path_tmp = table_xml_update(xml_path, new_index, [], xml_path.with_name("." + xml_path.name))
@@ -61,6 +60,10 @@ def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
 
             if new_index != index:
                 xml_path.parent.rename(xml_path.parent.with_name(f"table{new_index}"))
+
+            echo(f"\r{archive.name}/{table['folder']}/{table['name']}/moved to table{new_index}   ")
+
+        table_index_update(tables_index_path, [], tables_to_remove, tables_index_path)
     except (Exception, BaseException) as err:
         print()
         echo("ERROR: The operation was interrupted before all changes could be written.",

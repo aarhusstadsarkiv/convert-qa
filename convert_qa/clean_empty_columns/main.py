@@ -115,13 +115,15 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
     out_path = out_path or path.with_suffix(".new" + path.suffix)
 
     with path.open("rb") as fi:
-        with out_path.open("w", encoding="utf-8") as fo:
-            if not remove_columns:
-                def callback(_, row: dict):
-                    unparse_xml({"row": row}, fo, "utf-8", full_document=False)
-                    fo.write("\n")
-                    return True
-            else:
+        if remove_columns:
+            with out_path.open("w", encoding="utf-8") as fo:
+                fo.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
+                fo.write(
+                    f'<table '
+                    f'xsi:schemaLocation="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd ./table{index}.xsd" '
+                    f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                    f'xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd">\n')
+
                 def callback(_, row: dict):
                     new_row: dict = {}
                     for col_id, col in row.items():
@@ -134,14 +136,31 @@ def table_xml_update(path: Path, index: int, remove_columns: list[str], out_path
                     fo.write("\n")
                     return True
 
-            fo.write('<?xml version="1.0" encoding="UTF-8" ?>\n')
-            fo.write(
-                f'<table '
-                f'xsi:schemaLocation="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd ./table{index}.xsd" '
-                f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
-                f'xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd">\n')
-            parse_xml(fi, item_depth=2, item_callback=callback, force_list=True)
-            fo.write('</table>')
+                parse_xml(fi, item_depth=2, item_callback=callback, force_list=True)
+                fo.write('</table>')
+        else:
+            with out_path.open("wb") as fo:
+                fo.write('<?xml version="1.0" encoding="UTF-8" ?>\n'.encode())
+                fo.write(
+                    (
+                        f'<table '
+                        f'xsi:schemaLocation="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd ./table{index}.xsd" '
+                        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+                        f'xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table{index}.xsd">\n'
+                    ).encode()
+                )
+
+                chunk: bytes = bytes(5)
+                while chunk != b"<row>":
+                    new_byte: bytes = fi.read(1)
+                    if not new_byte:
+                        chunk = "</table>".encode()
+                        break
+                    chunk = chunk[1:] + new_byte
+
+                while chunk:
+                    fo.write(chunk)
+                    chunk = fi.read(10_000_000)
 
     return out_path
 
@@ -151,20 +170,20 @@ def table_xsd_update(path: Path, table_index: int, remove_columns: list[str], ou
     remove_columns_indices = [int(c.removeprefix("c")) for c in remove_columns]
     out_path = out_path or path.with_suffix(".new" + path.suffix)
 
-    xsd = parse_xml(path.open("rb"), "utf-8", force_list=True)
-    xsd["xs:schema"][0]["@xmlns"][0] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
-    xsd["xs:schema"][0]["@targetNamespace"][0] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
+    xsd = parse_xml(path.read_bytes(), "utf-8", force_list=True)
+    xsd["xs:schema"][0]["@xmlns"] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
+    xsd["xs:schema"][0]["@targetNamespace"] = f"http://www.sa.dk/xmlns/siard/1.0/schema0/table{table_index}.xsd"
     xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"] = [
         column
         for column in xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"]
-        if column['@name'][0] not in remove_columns
+        if column['@name'] not in remove_columns
     ]
     for column in xsd["xs:schema"][0]["xs:complexType"][0]["xs:sequence"][0]["xs:element"]:
-        column_index: int = int(column["@name"][0].removeprefix("c"))
+        column_index: int = int(column["@name"].removeprefix("c"))
         if column_index < min(remove_columns_indices, default=-1):
             continue
         column_index_diff: int = reduce(lambda p, c: (p + 1) if c < column_index else p, remove_columns_indices, 0)
-        column["@name"][0] = f"c{column_index - column_index_diff}"
+        column["@name"] = f"c{column_index - column_index_diff}"
 
     with out_path.open("w") as fh:
         unparse_xml(xsd, fh, "utf-8")
