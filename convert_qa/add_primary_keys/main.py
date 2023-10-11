@@ -107,7 +107,7 @@ def cli():
     Add missing primary keys to an archive.
     """
 
-    parser = ArgumentParser("primary-keys", description=cli.__doc__)
+    parser = ArgumentParser("add-primary-keys", description=cli.__doc__)
     parser.add_argument("archive", type=Path, help="the path to the archive")
     parser.add_argument("--log-file", type=Path, required=True, help="write change events to log file")
 

@@ -9,7 +9,7 @@ Preferred way is to install with pipx: `pipx install git+https://github.com/aarh
 Add missing primary keys to an archive.
 
 ```
-primary-keys [-h] --log-file LOG_FILE archive
+add-primary-keys [-h] --log-file LOG_FILE archive
 
 positional arguments:
   archive              the path to the archive
