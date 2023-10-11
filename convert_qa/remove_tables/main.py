@@ -15,15 +15,23 @@ from ..clean_empty_columns.main import table_xsd_update
 # noinspection DuplicatedCode
 def main(archive: Path, table_names: list[str], log_file: Optional[Path]):
     echo = print_with_file(log_file)
-
-    table_ids: list[int] = [int(t.removeprefix("table")) for t in map(str.lower, table_names)]
+    table_names = list(map(str.lower, table_names))
 
     tables_index_path: Path = archive.joinpath("Indices", "tableIndex.xml")
     tables_index: dict = parse_xml(tables_index_path.read_text())
-
     tables: list[dict] = tables_index["siardDiark"]["tables"]["table"]
+
+    table_ids: list[int] = [int(t.removeprefix("table")) for t in map(str.lower, table_names)]
+
+    if not table_ids:
+        table_ids = [int(t["folder"].lower().removeprefix("table")) for t in tables if t["rows"] == "0"]
+
     tables_to_remove: list[int] = [int(t["folder"].lower().removeprefix("table")) for t in tables]
     tables_to_remove = [ti for ti in tables_to_remove if ti in table_ids]
+
+    if not tables_to_remove:
+        echo(f"{archive.name}/no tables to remove")
+        return
 
     try:
         for table in sorted(tables, key=lambda t: int(t["folder"].removeprefix("table"))):
@@ -78,10 +86,21 @@ def cli():
     """
 
     parser = ArgumentParser("remove-tables", description=cli.__doc__)
+    tables_group = parser.add_mutually_exclusive_group()
+
     parser.add_argument("archive", type=Path, help="the path to the archive")
-    parser.add_argument("tables", nargs="+", help="the tables to remove")
+    tables_action = tables_group.add_argument("tables", nargs="*", default=[], help="the tables to remove")
+    empty_tables_action = tables_group.add_argument("--empty-tables", action="store_true",
+                                                    help="remove all empty tables")
     parser.add_argument("--log-file", type=Path, required=True, help="write change events to log file")
 
     args = parser.parse_args()
 
-    main(args.archive, args.tables, args.log_file)
+    if not args.tables and not args.empty_tables:
+        parser.error(
+            f"one of the following arguments is required: "
+            f"{tables_action.dest}, "
+            f"{empty_tables_action.option_strings[0]}")
+        return parser.exit(2)
+
+    main(args.archive, args.tables or [], args.log_file)
