@@ -4,6 +4,21 @@
 
 Preferred way is to install with pipx: `pipx install git+https://github.com/aarhusstadsarkiv/convert-qa.git`
 
+## add-primary-keys
+
+Add missing primary keys to an archive.
+
+```
+primary-keys [-h] --log-file LOG_FILE archive
+
+positional arguments:
+  archive              the path to the archive
+
+options:
+  -h, --help           show this help message and exit
+  --log-file LOG_FILE  write change events to log file
+```
+
 ## Convert-Compare
 
 This tool provides a way for you to easily compare files between original, master and statutory
