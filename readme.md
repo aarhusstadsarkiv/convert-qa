@@ -116,6 +116,8 @@ options:
 
 Remove tables from a given archive.
 
+Use `@empty` as tables argument to automatically remove all tables with no rows.
+
 ```
 remove-tables [-h] [--log-file LOG_FILE] archive tables [tables ...]
 
